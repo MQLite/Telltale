@@ -1,0 +1,6 @@
+@Telltale_HostAddress = http://localhost:5029
+
+GET {{Telltale_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
