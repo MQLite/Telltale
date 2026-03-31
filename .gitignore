@@ -1,0 +1,46 @@
+## Build output
+bin/
+obj/
+
+## .NET user-specific files
+*.user
+*.userosscache
+*.sln.docstates
+
+## ASP.NET Core environment overrides
+appsettings.*.json
+!appsettings.Development.json
+
+## Rider / Visual Studio
+.vs/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates
+
+## VS Code (keep shared settings)
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+## NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+## Logs
+*.log
+logs/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Secrets / certs
+*.pfx
+*.p12
+*.pem
+secrets.json
