@@ -8,8 +8,8 @@ obj/
 *.sln.docstates
 
 ## ASP.NET Core environment overrides
+## Never commit appsettings overrides — use User Secrets or env vars for keys
 appsettings.*.json
-!appsettings.Development.json
 
 ## Rider / Visual Studio
 .vs/
@@ -38,6 +38,9 @@ logs/
 ## OS
 .DS_Store
 Thumbs.db
+
+## Runtime cache (stories + images generated at runtime)
+data/
 
 ## Secrets / certs
 *.pfx
