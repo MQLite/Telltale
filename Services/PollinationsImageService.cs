@@ -95,6 +95,7 @@ public class PollinationsImageService(
 
                 var ttl = configuration.GetValue<int>("Cache:ImageTtlHours", 24);
                 cache.Set(cacheKey, (bytes, contentType), TimeSpan.FromHours(ttl));
+                await fileCache.SetBytesAsync(cacheKey, bytes, contentType);
 
                 return (bytes, contentType);
             }
