@@ -47,3 +47,8 @@ data/
 *.p12
 *.pem
 secrets.json
+
+## Claude Code
+.claude/*
+!.claude/memory/
+!.claude/memory/**
