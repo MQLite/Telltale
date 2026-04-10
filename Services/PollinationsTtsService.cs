@@ -8,19 +8,20 @@ public class PollinationsTtsService(
 {
     private const string BaseUrl = "https://gen.pollinations.ai/audio";
 
-    public async Task<(byte[] Bytes, string ContentType)> SynthesizeAsync(string text, string language)
+    public async Task<(byte[] Bytes, string ContentType)> SynthesizeAsync(string text, string language, string? voice = null)
     {
-        var cacheKey = $"tts:{language}:{text}";
+        var defaultVoice = language == "zh"
+            ? (configuration["Pollinations:TtsVoiceZh"] ?? "nova")
+            : (configuration["Pollinations:TtsVoiceEn"] ?? "fable");
+        voice = string.IsNullOrWhiteSpace(voice) ? defaultVoice : voice;
+
+        var cacheKey = $"tts:{language}:{voice}:{text}";
 
         if (await fileCache.GetBytesAsync(cacheKey) is { } fromDisk)
         {
-            logger.LogInformation("TTS cache HIT — lang={Lang}", language);
+            logger.LogInformation("TTS cache HIT — lang={Lang} voice={Voice}", language, voice);
             return fromDisk;
         }
-
-        var voice  = language == "zh"
-            ? (configuration["Pollinations:TtsVoiceZh"] ?? "nova")
-            : (configuration["Pollinations:TtsVoiceEn"] ?? "fable");
         var apiKey = configuration["Pollinations:ApiKey"];
 
         if (string.IsNullOrWhiteSpace(apiKey))

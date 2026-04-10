@@ -97,6 +97,7 @@ app.MapGet("/api/image", async (
 app.MapGet("/api/tts", async (
     string text,
     string lang,
+    string? voice,
     ITtsService tts,
     ILogger<Program> logger) =>
 {
@@ -104,7 +105,7 @@ app.MapGet("/api/tts", async (
         return Results.BadRequest("text is required");
     try
     {
-        var (bytes, contentType) = await tts.SynthesizeAsync(text, lang);
+        var (bytes, contentType) = await tts.SynthesizeAsync(text, lang, voice);
         return Results.Bytes(bytes, contentType);
     }
     catch (InvalidOperationException ex)
