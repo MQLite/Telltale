@@ -6,7 +6,7 @@ public class PollinationsTtsService(
     IFileCache fileCache,
     ILogger<PollinationsTtsService> logger) : ITtsService
 {
-    private const string BaseUrl = "https://text.pollinations.ai";
+    private const string BaseUrl = "https://gen.pollinations.ai/audio";
 
     public async Task<(byte[] Bytes, string ContentType)> SynthesizeAsync(string text, string language)
     {
@@ -18,19 +18,23 @@ public class PollinationsTtsService(
             return fromDisk;
         }
 
-        var voice   = language == "zh"
+        var voice  = language == "zh"
             ? (configuration["Pollinations:TtsVoiceZh"] ?? "nova")
-            : (configuration["Pollinations:TtsVoiceEn"] ?? "alloy");
-        var apiKey  = configuration["Pollinations:ApiKey"];
+            : (configuration["Pollinations:TtsVoiceEn"] ?? "fable");
+        var apiKey = configuration["Pollinations:ApiKey"];
 
-        var url = $"{BaseUrl}/{Uri.EscapeDataString(text)}?model=openai-audio&voice={voice}";
-        if (!string.IsNullOrWhiteSpace(apiKey))
-            url += $"&key={apiKey}";
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new InvalidOperationException(
+                "Pollinations API key not configured. Register free at https://auth.pollinations.ai and set Pollinations:ApiKey.");
+
+        var url = $"{BaseUrl}/{Uri.EscapeDataString(text)}?model=tts-1&voice={voice}&response_format=mp3&key={apiKey}";
 
         logger.LogInformation("TTS request — voice={Voice} lang={Lang}", voice, language);
 
-        var client = httpClientFactory.CreateClient("image"); // reuse 5-min timeout client
-        using var response = await client.GetAsync(url);
+        var client = httpClientFactory.CreateClient("image");
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+        using var response = await client.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
         {
