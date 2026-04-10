@@ -5,11 +5,19 @@ using Telltale.Models;
 
 namespace Telltale.Services;
 
-public class FileCache(IConfiguration configuration, ILogger<FileCache> logger) : IFileCache
+public class FileCache : IFileCache
 {
-    private readonly string _root = configuration["Storage:Path"] ?? "./data";
+    private readonly string _root;
+    private readonly ILogger<FileCache> _logger;
     private static readonly SemaphoreSlim _indexLock = new(1, 1);
     private static readonly JsonSerializerOptions _json = new() { WriteIndented = true };
+
+    public FileCache(IConfiguration configuration, ILogger<FileCache> logger)
+    {
+        _logger = logger;
+        _root = Path.GetFullPath(configuration["Storage:Path"] ?? "./data");
+        _logger.LogInformation("FileCache storage root resolved to: {Root}", _root);
+    }
 
     private string Dir(string sub)
     {
@@ -35,12 +43,12 @@ public class FileCache(IConfiguration configuration, ILogger<FileCache> logger) 
         {
             await using var fs = File.OpenRead(path);
             var value = await JsonSerializer.DeserializeAsync<T>(fs);
-            logger.LogInformation("Disk HIT  — story key={Key}", key);
+            _logger.LogInformation("Disk HIT  — story key={Key}", key);
             return value;
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Disk read failed for story key={Key}, deleting corrupt file", key);
+            _logger.LogWarning(ex, "Disk read failed for story key={Key}, deleting corrupt file", key);
             File.Delete(path);
             return null;
         }
@@ -53,11 +61,11 @@ public class FileCache(IConfiguration configuration, ILogger<FileCache> logger) 
         {
             await using var fs = File.Create(path);
             await JsonSerializer.SerializeAsync(fs, value);
-            logger.LogInformation("Disk WRITE — story key={Key}", key);
+            _logger.LogInformation("Disk WRITE — story key={Key}", key);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Disk write failed for story key={Key}", key);
+            _logger.LogWarning(ex, "Disk write failed for story key={Key}", key);
         }
     }
 
@@ -75,12 +83,12 @@ public class FileCache(IConfiguration configuration, ILogger<FileCache> logger) 
         {
             var data        = await File.ReadAllBytesAsync(dataPath);
             var contentType = await File.ReadAllTextAsync(metaPath);
-            logger.LogInformation("Disk HIT  — image key={Key}", key);
+            _logger.LogInformation("Disk HIT  — image key={Key}", key);
             return (data, contentType.Trim());
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Disk read failed for image key={Key}", key);
+            _logger.LogWarning(ex, "Disk read failed for image key={Key}", key);
             return null;
         }
     }
@@ -95,11 +103,11 @@ public class FileCache(IConfiguration configuration, ILogger<FileCache> logger) 
         {
             await File.WriteAllBytesAsync(dataPath, data);
             await File.WriteAllTextAsync(metaPath, contentType);
-            logger.LogInformation("Disk WRITE — image key={Key} size={Size}b", key, data.Length);
+            _logger.LogInformation("Disk WRITE — image key={Key} size={Size}b", key, data.Length);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Disk write failed for image key={Key}", key);
+            _logger.LogWarning(ex, "Disk write failed for image key={Key}", key);
         }
     }
 
@@ -118,7 +126,7 @@ public class FileCache(IConfiguration configuration, ILogger<FileCache> logger) 
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to read story index");
+            _logger.LogWarning(ex, "Failed to read story index");
             return [];
         }
     }
@@ -144,7 +152,7 @@ public class FileCache(IConfiguration configuration, ILogger<FileCache> logger) 
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to update story index");
+            _logger.LogWarning(ex, "Failed to update story index");
         }
         finally
         {

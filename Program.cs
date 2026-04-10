@@ -16,6 +16,7 @@ else
 
 builder.Services.AddSingleton<IFileCache, FileCache>();
 builder.Services.AddSingleton<IImageService, PollinationsImageService>();
+builder.Services.AddSingleton<ITtsService, PollinationsTtsService>();
 
 var allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
@@ -91,6 +92,32 @@ app.MapGet("/api/image", async (
     }
 })
 .WithName("GetImage")
+.WithOpenApi();
+
+app.MapGet("/api/tts", async (
+    string text,
+    string lang,
+    ITtsService tts,
+    ILogger<Program> logger) =>
+{
+    if (string.IsNullOrWhiteSpace(text))
+        return Results.BadRequest("text is required");
+    try
+    {
+        var (bytes, contentType) = await tts.SynthesizeAsync(text, lang);
+        return Results.Bytes(bytes, contentType);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 501);
+    }
+    catch (HttpRequestException ex)
+    {
+        logger.LogError(ex, "TTS generation failed");
+        return Results.Problem(ex.Message, statusCode: (int?)ex.StatusCode ?? 502);
+    }
+})
+.WithName("GetTts")
 .WithOpenApi();
 
 app.Run();
