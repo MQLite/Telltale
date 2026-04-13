@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Caching.Memory;
@@ -80,19 +80,24 @@ public class PollinationsStoryService(
         {
             model,
             stream = false,
-            response_format = new { type = "json_object" },
             messages = new[]
             {
                 new { role = "user", content = prompt }
             }
         };
 
-        logger.LogInformation("Calling Pollinations chat API — model={Model} keywords={Keywords}", model, keywords);
+        var requestJson = JsonSerializer.Serialize(requestBody, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
 
-        var client = httpClientFactory.CreateClient();
+        logger.LogInformation("Calling Pollinations chat API — model={Model} keywords={Keywords}", model, keywords);
+        logger.LogDebug("Request body: {Body}", requestJson);
+
+        var client = httpClientFactory.CreateClient("image"); // 5-min timeout
         using var request = new HttpRequestMessage(HttpMethod.Post, ApiUrl);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
-        request.Content = JsonContent.Create(requestBody);
+        request.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
         HttpResponseMessage response;
         try
