@@ -140,6 +140,34 @@ public class FileCache : IFileCache
         }
     }
 
+    public async Task AddCachedVoiceAsync(string keywords, string language, string voice)
+    {
+        await _indexLock.WaitAsync();
+        try
+        {
+            var list = await GetStoryListAsync();
+            var idx = list.FindIndex(s => s.Keywords == keywords && s.Language == language);
+            if (idx < 0) return;
+
+            var entry = list[idx];
+            var voices = entry.CachedVoices ?? [];
+            if (voices.Contains(voice)) return;
+
+            list[idx] = entry with { CachedVoices = [.. voices, voice] };
+
+            await using var fs = File.Create(IndexPath);
+            await JsonSerializer.SerializeAsync(fs, list, _json);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to update cached voices for keywords={Keywords}", keywords);
+        }
+        finally
+        {
+            _indexLock.Release();
+        }
+    }
+
     public string BuildStoryCacheKey(string keywords, string language) =>
         $"story:{NormalizeKeywords(keywords)}:{language}";
 

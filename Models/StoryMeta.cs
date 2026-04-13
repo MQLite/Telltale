@@ -5,5 +5,6 @@ public record StoryMeta(
     string TitleZh,
     string Keywords,
     string Language,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    List<string>? CachedVoices = null
 );

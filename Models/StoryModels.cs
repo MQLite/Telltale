@@ -2,6 +2,8 @@ namespace Telltale.Models;
 
 public record StoryRequest(string Keywords, string Language);
 
+public record StoryVoiceRequest(string Keywords, string Language, string Voice);
+
 public record BatchTtsRequest(string[] Texts, string Language, string? Voice);
 
 public record Sentence(string Text, string Emotion);

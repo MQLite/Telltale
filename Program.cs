@@ -70,6 +70,16 @@ app.MapGet("/api/story/list", async (IFileCache fileCache) =>
 .WithName("ListStories")
 .WithOpenApi();
 
+app.MapPost("/api/story/voice", async (StoryVoiceRequest req, IFileCache fileCache) =>
+{
+    if (string.IsNullOrWhiteSpace(req.Keywords) || string.IsNullOrWhiteSpace(req.Language) || string.IsNullOrWhiteSpace(req.Voice))
+        return Results.BadRequest("keywords, language and voice are required");
+    await fileCache.AddCachedVoiceAsync(req.Keywords, req.Language, req.Voice);
+    return Results.Ok();
+})
+.WithName("AddCachedVoice")
+.WithOpenApi();
+
 app.MapDelete("/api/story", async (string keywords, string language, IFileCache fileCache) =>
 {
     if (string.IsNullOrWhiteSpace(keywords) || string.IsNullOrWhiteSpace(language))
