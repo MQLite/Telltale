@@ -59,8 +59,8 @@ public class PollinationsStoryService(
               "pages": [
                 {
                   "pageNumber": 1,
-                  "contentEn": "2-3 sentences of story content in English.",
-                  "contentZh": "2-3句中文故事内容。",
+                  "contentEn": "Rich, detailed story content for this page in English — at least 5-6 sentences.",
+                  "contentZh": "丰富详细的中文故事内容，至少5-6句话。",
                   "imagePrompt": "cartoon oil painting style, children's book illustration, warm soft colors, [describe the exact scene: characters, setting, actions, mood, lighting]"
                 }
               ]
@@ -68,8 +68,11 @@ public class PollinationsStoryService(
 
             Requirements:
             - Generate exactly 4 pages
-            - Each page: 2-3 sentences, warm and whimsical, age-appropriate for children 4-8
+            - Each page must contain at least 5-6 sentences (roughly 100 words in English, 100 characters in Chinese)
+            - The total story must be at least 400 words in English and 400 Chinese characters
+            - Write warmly and immersively — describe emotions, surroundings, and character actions in vivid detail
             - Story must have a clear beginning, middle, and positive ending
+            - age-appropriate for children 4-8, warm and whimsical tone
             - imagePrompt: vivid, painterly scene description in English — always start with "cartoon oil painting style, children's book illustration"
             - CRITICAL: All string values must be on a single line — no newlines inside any JSON string value
             - CRITICAL: Do not use double-quote characters inside any string value
@@ -80,6 +83,7 @@ public class PollinationsStoryService(
         {
             model,
             stream = false,
+            max_tokens = 4000,
             messages = new[]
             {
                 new { role = "user", content = prompt }
