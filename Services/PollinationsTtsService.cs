@@ -28,7 +28,8 @@ public class PollinationsTtsService(
             throw new InvalidOperationException(
                 "Pollinations API key not configured. Register free at https://auth.pollinations.ai and set Pollinations:ApiKey.");
 
-        var url = $"{BaseUrl}/{Uri.EscapeDataString(text)}?model=tts-1&voice={voice}&response_format=mp3";
+        var model = configuration["Pollinations:TtsModel"] ?? "acestep";
+        var url = $"{BaseUrl}/{Uri.EscapeDataString(text)}?model={model}&voice={voice}&response_format=mp3";
 
         logger.LogInformation("TTS request — voice={Voice} lang={Lang}", voice, language);
 
