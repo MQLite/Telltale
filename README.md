@@ -27,11 +27,10 @@ A bilingual children's story generator with AI-illustrated pages and narration. 
 | TTS narration | Pollinations.ai audio API |
 | Frontend | React + TypeScript (Vite) |
 | Caching | IMemoryCache + file system (SHA256 hash filenames) |
-| Deployment | systemd + nginx on Ubuntu 22 |
 
 ---
 
-## Getting Started
+## Getting Started (Development)
 
 ### Prerequisites
 
@@ -45,7 +44,7 @@ A bilingual children's story generator with AI-illustrated pages and narration. 
 git clone https://github.com/MQLite/Telltale.git
 cd Telltale
 
-# Set API key via User Secrets (development)
+# Set API key via User Secrets
 dotnet user-secrets set "Pollinations:ApiKey" "your-key-here"
 
 dotnet run
@@ -62,7 +61,7 @@ npm run dev
 # Open http://localhost:5173
 ```
 
-The Vite dev server proxies `/api/*` to `http://localhost:5000` automatically.
+The Vite dev server proxies `/api/*` to `http://localhost:5000` automatically — no CORS configuration needed in development.
 
 ---
 
@@ -105,27 +104,103 @@ The Vite dev server proxies `/api/*` to `http://localhost:5000` automatically.
 
 ---
 
-## Production Deployment (Ubuntu 22)
+## Production Deployment
 
-### systemd service
+Both backend and frontend are built as static artifacts first, then served by a reverse proxy.
 
-```ini
-[Service]
-User=telltale
-WorkingDirectory=/var/www/telltale/api
-ExecStart=/usr/bin/dotnet /var/www/telltale/api/Telltale.dll
-Environment=ASPNETCORE_ENVIRONMENT=Production
-Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
-Environment=Storage__Path=/var/www/telltale/data
-EnvironmentFile=/etc/telltale/secrets.env
+### Build
+
+```bash
+# Backend — publish self-contained release
+cd Telltale
+dotnet publish -c Release -o ./publish
+
+# Frontend — build static files
+cd TelltaleClient
+npm run build
+# Output in ./dist/
 ```
 
-`/etc/telltale/secrets.env` (chmod 640):
+---
+
+### Ubuntu 22
+
+#### 1. Install dependencies
+
+```bash
+# .NET 8 runtime
+wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+sudo apt update && sudo apt install -y dotnet-runtime-8.0
+
+# nginx
+sudo apt install -y nginx
+```
+
+#### 2. Deploy files
+
+```bash
+sudo mkdir -p /var/www/telltale/{api,web,data}
+sudo useradd -r -s /bin/false telltale
+sudo chown -R telltale:telltale /var/www/telltale
+
+# Upload build artifacts
+rsync -av Telltale/publish/   user@server:/var/www/telltale/api/
+rsync -av TelltaleClient/dist/ user@server:/var/www/telltale/web/
+```
+
+#### 3. API key secrets
+
+```bash
+sudo mkdir -p /etc/telltale
+sudo nano /etc/telltale/secrets.env
+```
+
 ```
 Pollinations__ApiKey=your-key-here
 ```
 
-### nginx
+```bash
+sudo chown root:telltale /etc/telltale/secrets.env
+sudo chmod 640 /etc/telltale/secrets.env
+```
+
+#### 4. systemd service
+
+```bash
+sudo nano /etc/systemd/system/telltale.service
+```
+
+```ini
+[Unit]
+Description=Telltale Story API
+After=network.target
+
+[Service]
+Type=simple
+User=telltale
+WorkingDirectory=/var/www/telltale/api
+ExecStart=/usr/bin/dotnet /var/www/telltale/api/Telltale.dll
+Restart=on-failure
+EnvironmentFile=/etc/telltale/secrets.env
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+Environment=Storage__Path=/var/www/telltale/data
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now telltale
+```
+
+#### 5. nginx
+
+```bash
+sudo nano /etc/nginx/sites-available/telltale
+```
 
 ```nginx
 server {
@@ -138,6 +213,7 @@ server {
         proxy_pass         http://127.0.0.1:5000/api/;
         proxy_http_version 1.1;
         proxy_set_header   Host $host;
+        proxy_set_header   X-Real-IP $remote_addr;
         proxy_read_timeout 120s;
     }
 
@@ -146,6 +222,103 @@ server {
     }
 }
 ```
+
+```bash
+sudo ln -s /etc/nginx/sites-available/telltale /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+---
+
+### Windows Server
+
+#### 1. Install dependencies
+
+- [.NET 8 Hosting Bundle](https://dotnet.microsoft.com/download) (includes ASP.NET Core runtime + IIS integration)
+- [IIS](https://learn.microsoft.com/iis) — enable via *Server Manager → Add Roles → Web Server (IIS)*
+- [URL Rewrite Module for IIS](https://www.iis.net/downloads/microsoft/url-rewrite)
+
+#### 2. Deploy files
+
+```
+C:\inetpub\telltale\
+  api\        ← dotnet publish output
+  web\        ← npm run build output (dist/)
+  data\       ← created automatically at runtime
+```
+
+#### 3. API key — environment variable
+
+Set via *System Properties → Environment Variables* or PowerShell (run as Administrator):
+
+```powershell
+[System.Environment]::SetEnvironmentVariable("Pollinations__ApiKey", "your-key-here", "Machine")
+```
+
+#### 4. Backend — Windows Service
+
+```powershell
+# Install as a Windows Service (runs as NetworkService or a dedicated account)
+sc.exe create Telltale `
+  binPath= "dotnet C:\inetpub\telltale\api\Telltale.dll" `
+  start= auto
+
+sc.exe start Telltale
+```
+
+Or use IIS in-process hosting by adding a `web.config` alongside the published DLL:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.webServer>
+    <handlers>
+      <add name="aspNetCore" path="*" verb="*"
+           modules="AspNetCoreModuleV2" resourceType="Unspecified" />
+    </handlers>
+    <aspNetCore processPath="dotnet"
+                arguments="Telltale.dll"
+                stdoutLogEnabled="true"
+                stdoutLogFile=".\logs\stdout"
+                hostingModel="inprocess">
+      <environmentVariables>
+        <environmentVariable name="ASPNETCORE_ENVIRONMENT" value="Production" />
+        <environmentVariable name="ASPNETCORE_URLS" value="http://127.0.0.1:5000" />
+        <environmentVariable name="Storage__Path" value="C:\inetpub\telltale\data" />
+      </environmentVariables>
+    </aspNetCore>
+  </system.webServer>
+</configuration>
+```
+
+#### 5. Frontend + reverse proxy — IIS
+
+Create two IIS sites:
+
+**Frontend site** (`telltale-web`) — serves `C:\inetpub\telltale\web\`  
+Add a URL Rewrite rule to support SPA routing (send all non-file requests to `index.html`):
+
+```xml
+<rewrite>
+  <rules>
+    <rule name="SPA fallback" stopProcessing="true">
+      <match url=".*" />
+      <conditions logicalGrouping="MatchAll">
+        <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+        <add input="{REQUEST_URI}" pattern="^/api" negate="true" />
+      </conditions>
+      <action type="Rewrite" url="/index.html" />
+    </rule>
+    <rule name="API proxy" stopProcessing="true">
+      <match url="^api/(.*)" />
+      <action type="Rewrite" url="http://127.0.0.1:5000/api/{R:1}"
+              appendQueryString="true" />
+    </rule>
+  </rules>
+</rewrite>
+```
+
+> **Note:** IIS reverse proxy requires the [Application Request Routing (ARR)](https://www.iis.net/downloads/microsoft/application-request-routing) module. Enable proxy in ARR settings after installing.
 
 ---
 
