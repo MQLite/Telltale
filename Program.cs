@@ -133,7 +133,13 @@ app.MapPost("/api/tts/batch", async (
         var audios = new string[req.Texts.Length];
         for (var i = 0; i < req.Texts.Length; i++)
         {
-            var (bytes, _) = await tts.SynthesizeAsync(req.Texts[i], req.Language, req.Voice);
+            var emotion = req.Emotions is { Length: > 0 } && i < req.Emotions.Length
+                ? req.Emotions[i] : null;
+            // Prepend emotion as a stage direction so TTS model adjusts its delivery
+            var text = !string.IsNullOrWhiteSpace(emotion)
+                ? $"({emotion}) {req.Texts[i]}"
+                : req.Texts[i];
+            var (bytes, _) = await tts.SynthesizeAsync(text, req.Language, req.Voice);
             audios[i] = Convert.ToBase64String(bytes);
         }
         return Results.Ok(new { audios });

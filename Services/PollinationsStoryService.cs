@@ -61,7 +61,8 @@ public class PollinationsStoryService(
                   "pageNumber": 1,
                   "contentEn": "Rich, detailed story content for this page in English — at least 5-6 sentences.",
                   "contentZh": "丰富详细的中文故事内容，至少5-6句话。",
-                  "imagePrompt": "cartoon oil painting style, children's book illustration, warm soft colors, [describe the exact scene: characters, setting, actions, mood, lighting]"
+                  "imagePrompt": "cartoon oil painting style, children's book illustration, warm soft colors, [describe the exact scene: characters, setting, actions, mood, lighting]",
+                  "emotion": "warmly"
                 }
               ]
             }
@@ -74,6 +75,7 @@ public class PollinationsStoryService(
             - Story must have a clear beginning, middle, and positive ending
             - age-appropriate for children 4-8, warm and whimsical tone
             - imagePrompt: vivid, painterly scene description in English — always start with "cartoon oil painting style, children's book illustration"
+            - emotion: one English adverb describing the narrator's tone for this page, matching the scene mood. Examples: warmly, excitedly, mysteriously, sadly, cheerfully, gently, breathlessly, triumphantly
             - CRITICAL: All string values must be on a single line — no newlines inside any JSON string value
             - CRITICAL: Do not use double-quote characters inside any string value
             - CRITICAL: Return ONLY valid JSON — nothing else before or after, no trailing commas

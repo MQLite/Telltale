@@ -2,7 +2,7 @@ namespace Telltale.Models;
 
 public record StoryRequest(string Keywords, string Language);
 
-public record BatchTtsRequest(string[] Texts, string Language, string? Voice);
+public record BatchTtsRequest(string[] Texts, string[] Emotions, string Language, string? Voice);
 
 public class StoryPage
 {
@@ -10,6 +10,7 @@ public class StoryPage
     public string ContentEn { get; set; } = "";
     public string ContentZh { get; set; } = "";
     public string ImagePrompt { get; set; } = "";
+    public string Emotion { get; set; } = "warmly";
 }
 
 public class StoryResponse
