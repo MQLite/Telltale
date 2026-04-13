@@ -59,23 +59,31 @@ public class PollinationsStoryService(
               "pages": [
                 {
                   "pageNumber": 1,
-                  "contentEn": "Rich, detailed story content for this page in English — at least 5-6 sentences.",
-                  "contentZh": "丰富详细的中文故事内容，至少5-6句话。",
-                  "imagePrompt": "cartoon oil painting style, children's book illustration, warm soft colors, [describe the exact scene: characters, setting, actions, mood, lighting]",
-                  "emotion": "warmly"
+                  "sentencesEn": [
+                    {"text": "First sentence in English.", "emotion": "warmly"},
+                    {"text": "Second sentence — mood shifts here.", "emotion": "mysteriously"},
+                    {"text": "Third sentence.", "emotion": "excitedly"}
+                  ],
+                  "sentencesZh": [
+                    {"text": "第一句中文。", "emotion": "warmly"},
+                    {"text": "第二句，情绪变化。", "emotion": "mysteriously"},
+                    {"text": "第三句。", "emotion": "excitedly"}
+                  ],
+                  "imagePrompt": "cartoon oil painting style, children's book illustration, warm soft colors, [describe the exact scene: characters, setting, actions, mood, lighting]"
                 }
               ]
             }
 
             Requirements:
             - Generate exactly 4 pages
-            - Each page must contain at least 5-6 sentences (roughly 100 words in English, 100 characters in Chinese)
+            - Each page must have at least 5 sentences in both sentencesEn and sentencesZh
             - The total story must be at least 400 words in English and 400 Chinese characters
             - Write warmly and immersively — describe emotions, surroundings, and character actions in vivid detail
             - Story must have a clear beginning, middle, and positive ending
-            - age-appropriate for children 4-8, warm and whimsical tone
+            - Age-appropriate for children 4-8, warm and whimsical tone
             - imagePrompt: vivid, painterly scene description in English — always start with "cartoon oil painting style, children's book illustration"
-            - emotion: one English adverb describing the narrator's tone for this page, matching the scene mood. Examples: warmly, excitedly, mysteriously, sadly, cheerfully, gently, breathlessly, triumphantly
+            - emotion per sentence: one English adverb matching THAT sentence's mood. Examples: warmly, excitedly, mysteriously, sadly, cheerfully, gently, breathlessly, triumphantly. Vary emotions within a page to reflect the shifting narrative beat.
+            - sentencesEn and sentencesZh must have the SAME number of entries, one sentence per item
             - CRITICAL: All string values must be on a single line — no newlines inside any JSON string value
             - CRITICAL: Do not use double-quote characters inside any string value
             - CRITICAL: Return ONLY valid JSON — nothing else before or after, no trailing commas

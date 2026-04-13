@@ -2,15 +2,18 @@ namespace Telltale.Models;
 
 public record StoryRequest(string Keywords, string Language);
 
-public record BatchTtsRequest(string[] Texts, string[] Emotions, string Language, string? Voice);
+public record BatchTtsRequest(string[] Texts, string Language, string? Voice);
+
+public record Sentence(string Text, string Emotion);
 
 public class StoryPage
 {
     public int PageNumber { get; set; }
-    public string ContentEn { get; set; } = "";
-    public string ContentZh { get; set; } = "";
+    public List<Sentence> SentencesEn { get; set; } = [];
+    public List<Sentence> SentencesZh { get; set; } = [];
+    public string ContentEn => string.Join(" ", SentencesEn.Select(s => s.Text));
+    public string ContentZh => string.Join(" ", SentencesZh.Select(s => s.Text));
     public string ImagePrompt { get; set; } = "";
-    public string Emotion { get; set; } = "warmly";
 }
 
 public class StoryResponse
