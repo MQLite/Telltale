@@ -11,4 +11,5 @@ public interface IFileCache
     Task<List<StoryMeta>> GetStoryListAsync();
     Task AddStoryMetaAsync(StoryMeta meta);
     Task DeleteStoryAsync(string keywords, string language);
+    string BuildStoryCacheKey(string keywords, string language);
 }

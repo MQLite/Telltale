@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 using Telltale.Models;
 
 namespace Telltale.Services;
@@ -9,12 +10,14 @@ public class FileCache : IFileCache
 {
     private readonly string _root;
     private readonly ILogger<FileCache> _logger;
+    private readonly IMemoryCache _memoryCache;
     private static readonly SemaphoreSlim _indexLock = new(1, 1);
     private static readonly JsonSerializerOptions _json = new() { WriteIndented = true };
 
-    public FileCache(IConfiguration configuration, ILogger<FileCache> logger)
+    public FileCache(IConfiguration configuration, IMemoryCache memoryCache, ILogger<FileCache> logger)
     {
         _logger = logger;
+        _memoryCache = memoryCache;
         _root = Path.GetFullPath(configuration["Storage:Path"] ?? "./data");
         _logger.LogInformation("FileCache storage root resolved to: {Root}", _root);
     }
@@ -137,15 +140,20 @@ public class FileCache : IFileCache
         }
     }
 
+    public string BuildStoryCacheKey(string keywords, string language) =>
+        $"story:{NormalizeKeywords(keywords)}:{language}";
+
     public async Task DeleteStoryAsync(string keywords, string language)
     {
-        var cacheKey = $"story:{NormalizeKeywords(keywords)}:{language}";
+        var cacheKey = BuildStoryCacheKey(keywords, language);
         var path = Path.Combine(Dir("stories"), $"{Hash(cacheKey)}.json");
         if (File.Exists(path))
         {
             File.Delete(path);
             _logger.LogInformation("Disk DELETE — story key={Key}", cacheKey);
         }
+
+        _memoryCache.Remove(cacheKey);
 
         await _indexLock.WaitAsync();
         try

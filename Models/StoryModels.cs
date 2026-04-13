@@ -11,8 +11,21 @@ public class StoryPage
     public int PageNumber { get; set; }
     public List<Sentence> SentencesEn { get; set; } = [];
     public List<Sentence> SentencesZh { get; set; } = [];
-    public string ContentEn => string.Join(" ", SentencesEn.Select(s => s.Text));
-    public string ContentZh => string.Join(" ", SentencesZh.Select(s => s.Text));
+
+    // Computed from sentences; settable so old cached JSON (pre-sentences format) deserializes correctly.
+    private string? _contentEn;
+    private string? _contentZh;
+    public string ContentEn
+    {
+        get => SentencesEn.Count > 0 ? string.Join(" ", SentencesEn.Select(s => s.Text)) : (_contentEn ?? "");
+        set => _contentEn = value;
+    }
+    public string ContentZh
+    {
+        get => SentencesZh.Count > 0 ? string.Join(" ", SentencesZh.Select(s => s.Text)) : (_contentZh ?? "");
+        set => _contentZh = value;
+    }
+
     public string ImagePrompt { get; set; } = "";
 }
 

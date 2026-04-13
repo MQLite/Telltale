@@ -45,9 +45,6 @@ public class PollinationsImageService(
         var url  = $"{BaseUrl}/image/{Uri.EscapeDataString(full)}" +
                    $"?model={model}&width={width}&height={height}&seed={seed}&nologo=true";
 
-        if (!string.IsNullOrWhiteSpace(apiKey))
-            url += $"&key={Uri.EscapeDataString(apiKey)}";
-
         var client = httpClientFactory.CreateClient("image");
 
         for (var attempt = 1; attempt <= MaxRetries; attempt++)
