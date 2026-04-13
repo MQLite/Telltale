@@ -4,6 +4,8 @@ A bilingual children's story generator with AI-illustrated pages and narration. 
 
 **Frontend repo:** [MQLite/TelltaleClient](https://github.com/MQLite/TelltaleClient)
 
+[![Built with Pollinations.AI](https://img.shields.io/badge/Built%20with-Pollinations.AI-ff6a00?style=flat&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0tMSAxNy45M1Y0LjA3YzMuOTMuNDkgNyAzLjg1IDcgNy45M3MtMy4wNyA3LjQ0LTcgNy45M3oiLz48L3N2Zz4=)](https://pollinations.ai)
+
 ---
 
 ## Features
@@ -319,6 +321,14 @@ Add a URL Rewrite rule to support SPA routing (send all non-file requests to `in
 ```
 
 > **Note:** IIS reverse proxy requires the [Application Request Routing (ARR)](https://www.iis.net/downloads/microsoft/application-request-routing) module. Enable proxy in ARR settings after installing.
+
+---
+
+## Credits
+
+AI features (story generation, image generation, and voice narration) are powered by [Pollinations.AI](https://pollinations.ai) — a free, open generative AI platform.
+
+[![Pollinations.AI](https://image.pollinations.ai/prompt/pollinations%20logo%20white%20minimal?width=200&height=60&model=flux&nologo=true)](https://pollinations.ai)
 
 ---
 
