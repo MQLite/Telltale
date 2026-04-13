@@ -70,6 +70,16 @@ app.MapGet("/api/story/list", async (IFileCache fileCache) =>
 .WithName("ListStories")
 .WithOpenApi();
 
+app.MapDelete("/api/story", async (string keywords, string language, IFileCache fileCache) =>
+{
+    if (string.IsNullOrWhiteSpace(keywords) || string.IsNullOrWhiteSpace(language))
+        return Results.BadRequest("keywords and language are required");
+    await fileCache.DeleteStoryAsync(keywords, language);
+    return Results.Ok();
+})
+.WithName("DeleteStory")
+.WithOpenApi();
+
 app.MapGet("/api/image", async (
     string prompt,
     int seed,

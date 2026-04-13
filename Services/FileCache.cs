@@ -116,6 +116,11 @@ public class FileCache : IFileCache
 
     private string IndexPath => Path.Combine(Dir("stories"), "index.json");
 
+    private static string NormalizeKeywords(string keywords) =>
+        string.Join(' ', keywords.ToLowerInvariant()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Order());
+
     public async Task<List<StoryMeta>> GetStoryListAsync()
     {
         if (!File.Exists(IndexPath)) return [];
@@ -129,6 +134,34 @@ public class FileCache : IFileCache
         {
             _logger.LogWarning(ex, "Failed to read story index");
             return [];
+        }
+    }
+
+    public async Task DeleteStoryAsync(string keywords, string language)
+    {
+        var cacheKey = $"story:{NormalizeKeywords(keywords)}:{language}";
+        var path = Path.Combine(Dir("stories"), $"{Hash(cacheKey)}.json");
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+            _logger.LogInformation("Disk DELETE — story key={Key}", cacheKey);
+        }
+
+        await _indexLock.WaitAsync();
+        try
+        {
+            var list = await GetStoryListAsync();
+            list.RemoveAll(s => s.Keywords == keywords && s.Language == language);
+            await using var fs = File.Create(IndexPath);
+            await JsonSerializer.SerializeAsync(fs, list, _json);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to update story index after delete");
+        }
+        finally
+        {
+            _indexLock.Release();
         }
     }
 

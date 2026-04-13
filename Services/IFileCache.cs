@@ -10,4 +10,5 @@ public interface IFileCache
     Task SetBytesAsync(string key, byte[] data, string contentType);
     Task<List<StoryMeta>> GetStoryListAsync();
     Task AddStoryMetaAsync(StoryMeta meta);
+    Task DeleteStoryAsync(string keywords, string language);
 }
