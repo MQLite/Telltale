@@ -2,6 +2,8 @@ namespace Telltale.Models;
 
 public record StoryRequest(string Keywords, string Language);
 
+public record BatchTtsRequest(string[] Texts, string Language, string? Voice);
+
 public class StoryPage
 {
     public int PageNumber { get; set; }

@@ -121,4 +121,34 @@ app.MapGet("/api/tts", async (
 .WithName("GetTts")
 .WithOpenApi();
 
+app.MapPost("/api/tts/batch", async (
+    BatchTtsRequest req,
+    ITtsService tts,
+    ILogger<Program> logger) =>
+{
+    if (req.Texts is null || req.Texts.Length == 0)
+        return Results.BadRequest("texts is required");
+    try
+    {
+        var audios = new string[req.Texts.Length];
+        for (var i = 0; i < req.Texts.Length; i++)
+        {
+            var (bytes, _) = await tts.SynthesizeAsync(req.Texts[i], req.Language, req.Voice);
+            audios[i] = Convert.ToBase64String(bytes);
+        }
+        return Results.Ok(new { audios });
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 501);
+    }
+    catch (HttpRequestException ex)
+    {
+        logger.LogError(ex, "Batch TTS generation failed");
+        return Results.Problem(ex.Message, statusCode: (int?)ex.StatusCode ?? 502);
+    }
+})
+.WithName("BatchTts")
+.WithOpenApi();
+
 app.Run();

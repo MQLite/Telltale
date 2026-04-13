@@ -28,13 +28,14 @@ public class PollinationsTtsService(
             throw new InvalidOperationException(
                 "Pollinations API key not configured. Register free at https://auth.pollinations.ai and set Pollinations:ApiKey.");
 
-        var url = $"{BaseUrl}/{Uri.EscapeDataString(text)}?model=tts-1&voice={voice}&response_format=mp3&key={apiKey}";
+        var url = $"{BaseUrl}/{Uri.EscapeDataString(text)}?model=tts-1&voice={voice}&response_format=mp3";
 
         logger.LogInformation("TTS request — voice={Voice} lang={Lang}", voice, language);
 
         var client = httpClientFactory.CreateClient("image");
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+        request.Headers.Add("X-Api-Key", apiKey);
         using var response = await client.SendAsync(request);
 
         if (!response.IsSuccessStatusCode)
