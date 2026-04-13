@@ -45,7 +45,7 @@ public class PollinationsStoryService(
             throw new InvalidOperationException(
                 "Pollinations API key not configured. Set Pollinations:ApiKey.");
 
-        var model = configuration["Pollinations:TextModel"] ?? "qwen-safety";
+        var model = configuration["Pollinations:TextModel"] ?? "nova-fast";
 
         var prompt = $$"""
             You are a creative children's story writer. Generate a short illustrated story based on these keywords: {{keywords}}
