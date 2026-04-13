@@ -12,7 +12,7 @@ builder.Services.AddHttpClient("image", c => c.Timeout = TimeSpan.FromMinutes(5)
 if (builder.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>("Claude:UseMock"))
     builder.Services.AddSingleton<IClaudeService, MockClaudeService>();
 else
-    builder.Services.AddSingleton<IClaudeService, ClaudeService>();
+    builder.Services.AddSingleton<IClaudeService, PollinationsStoryService>();
 
 builder.Services.AddSingleton<IFileCache, FileCache>();
 builder.Services.AddSingleton<IImageService, PollinationsImageService>();

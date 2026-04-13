@@ -42,7 +42,8 @@ public class FileCache : IFileCache
         try
         {
             await using var fs = File.OpenRead(path);
-            var value = await JsonSerializer.DeserializeAsync<T>(fs);
+            var value = await JsonSerializer.DeserializeAsync<T>(fs,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             _logger.LogInformation("Disk HIT  — story key={Key}", key);
             return value;
         }
